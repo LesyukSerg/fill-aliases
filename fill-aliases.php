@@ -1,5 +1,11 @@
 <?
+    //ini_set("mbstring.func_overload", 2);
     require($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.php');
+
+    //$name = "Текст*89";
+    //$arParams = array("replace_space"=>"-","replace_other"=>"-");
+    //echo $trans = Cutil::translit($name,"ru",$arParams);
+    //die;
 
     function _translit($str)
     {
@@ -7,10 +13,11 @@
         $replacement = [
             'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'jo', 'ж' => 'zh', 'з' => 'z', 'и' => 'i', 'й' => 'j', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'х' => 'kh', 'ц' => 'c', 'ч' => 'ch', 'ш' => 'sh', 'щ' => 'csh', 'ъ' => '', 'ы' => 'y', 'ь' => '', 'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
             'А' => 'a', 'Б' => 'b', 'В' => 'v', 'Г' => 'g', 'Д' => 'd', 'Е' => 'e', 'Ё' => 'jo', 'Ж' => 'zh', 'З' => 'z', 'И' => 'i', 'Й' => 'j', 'К' => 'k', 'Л' => 'l', 'М' => 'm', 'Н' => 'n', 'О' => 'o', 'П' => 'p', 'Р' => 'r', 'С' => 's', 'Т' => 't', 'У' => 'u', 'Ф' => 'f', 'Х' => 'kh', 'Ц' => 'c', 'Ч' => 'ch', 'Ш' => 'sh', 'Щ' => 'shh', 'Ъ' => '', 'Ь' => '', 'Ы' => 'y', 'Э' => 'e', 'Ю' => 'yu', 'Я' => 'ya',
-            '*' => '_', '_' => '', '/' => '_', '[' => '', ']' => '', '-' => '_', '(' => '', ')' => '', ' ' => '_', ',' => '', '.' => '_', '&' => '', '!' => '', '+' => '', '#' => '', '@' => '', '™' => '', '$' => 's', '`' => '', "'" => '', '"' => ''
+            ':' => '', '>' => '_', '*' => '_', '_' => '', '/' => '_', '[' => '', ']' => '', '-' => '_', '(' => '', ')' => '', ' ' => '_', ',' => '', '.' => '_', '&' => '', '!' => '', '+' => '', '#' => '', '@' => '', '™' => '', '$' => 's', '`' => '', "'" => '', '"' => ''
         ];
         $s = strtr($str, $replacement);
         $s = str_replace(['___', '__'], '_', $s);
+        $s = preg_replace("#_+$#", '', $s);
 
         return $s;
     }
@@ -56,15 +63,13 @@
     }
 
     if (isset($_GET['update_prd'])) {
+        $time = microtime(1);
         echo "Обновление товаров<br>";
         $IBLOCK_ID = 6;
-        $arFilter = ['IBLOCK_ID' => $IBLOCK_ID];
-        $db_list = CIBlockSection::GetList(['ID' => 'DESC'], $arFilter, true, ["ID", "CODE", "NAME"]);
-
 
         $arSelect = ["ID", "NAME", "CODE"];
         $arFilter = ["IBLOCK_ID" => $IBLOCK_ID];
-        $res = CIBlockElement::GetList([], $arFilter, false, ["nPageSize" => 50], $arSelect);
+        $res = CIBlockElement::GetList([], $arFilter, false, false, $arSelect);
         while ($prod = $res->GetNextElement()) {
             $item = $prod->GetFields();
             $newCode = _translit($item['NAME']);
@@ -80,6 +85,10 @@
                 }
 
                 echo $item['ID'] . ' ' . $item['NAME'] . ': <br>' . $item['CODE'] . ' = <br>' . $newCode . '<hr>';
+            }
+
+            if (microtime(1) - $time > 9) {
+                die('<script>setTimeout(function(){ window.location = window.location.href }, 999);</script>');
             }
         }
     }
